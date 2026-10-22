@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
 <style>
-/* Layout: single phone column — compose card on top, upcoming list below, setup tucked at the end */
+/* Layout: single phone column — add-task card on top, tasks grouped by deadline below, setup tucked at the end */
 :root {
   --bg: #EEF2F7;
   --surface: #FFFFFF;
@@ -52,51 +52,71 @@ body {
 main { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
 header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 4px; }
 h1 { font: 800 2rem/1 var(--display); letter-spacing: -0.02em; margin: 0; }
-h2 { font: 600 0.78rem/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
-.status { font-size: 0.82rem; color: var(--muted); }
+h2, h3 { font: 600 0.78rem/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+h3.overdue { color: var(--danger); }
+.status { font-size: 0.82rem; color: var(--muted); text-align: right; }
 .status.warn { color: var(--danger); }
 
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.label { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 8px; }
 
-textarea, input[type=number], input[type=text], input[type=datetime-local], select {
-  width: 100%; font: inherit; color: var(--ink); background: var(--bg);
-  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+textarea, input[type=text], input[type=date], input[type=time] {
+  width: 100%; min-width: 0; font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; -webkit-appearance: none; appearance: none;
 }
 textarea { font-size: 1.15rem; resize: none; min-height: 3.2em; }
-textarea:focus, input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+textarea:focus, input:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-.chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.duerow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
-  font: 600 1rem var(--body); color: var(--ink); background: var(--chip);
-  border: 1px solid transparent; border-radius: 12px; padding: 12px 0; cursor: pointer;
-  font-variant-numeric: tabular-nums;
+  font: 600 0.92rem var(--body); color: var(--ink); background: var(--chip);
+  border: 1px solid transparent; border-radius: 999px; padding: 9px 14px; cursor: pointer;
 }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
-.chip.wide { grid-column: span 2; }
-
-.custom { display: grid; grid-template-columns: 1fr 1.3fr; gap: 8px; }
-.when { font-size: 0.9rem; color: var(--muted); min-height: 1.3em; font-variant-numeric: tabular-nums; }
+.preview { font-size: 0.85rem; color: var(--muted); display: flex; flex-direction: column; gap: 2px; font-variant-numeric: tabular-nums; }
+.preview .past { text-decoration: line-through; }
 
 .primary {
   font: 700 1.1rem var(--body); background: var(--accent); color: var(--accent-ink);
   border: 0; border-radius: 14px; padding: 16px; cursor: pointer;
 }
 .primary:disabled { opacity: 0.45; cursor: default; }
-
-.list { display: flex; flex-direction: column; }
-.item { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 14px 0; border-top: 1px solid var(--line); align-items: center; }
-.item:first-child { border-top: 0; padding-top: 4px; }
-.item .text { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-.item .meta { grid-column: 1; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.item .count { grid-row: 1 / span 2; grid-column: 2; font: 800 1.2rem var(--display); font-variant-numeric: tabular-nums; text-align: right; }
-.item.done .text, .item.done .count { color: var(--muted); }
-.item.done .count { font-size: 0.9rem; font-family: var(--body); font-weight: 600; color: var(--ok); }
-.item .remove { grid-column: 1 / -1; justify-self: start; font-size: 0.8rem; background: none; border: 0; color: var(--muted); padding: 2px 0; cursor: pointer; text-decoration: underline; }
-.empty { color: var(--muted); font-size: 0.95rem; margin: 0; }
+.formactions { display: flex; gap: 8px; }
+.formactions .primary { flex: 1; }
 
 .ghost { font: 600 0.95rem var(--body); background: var(--chip); color: var(--ink); border: 0; border-radius: 12px; padding: 12px 14px; cursor: pointer; }
+.ghost.danger { color: var(--danger); }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .row > * { flex: 1 1 auto; }
+
+.group { display: flex; flex-direction: column; gap: 4px; }
+.group + .group { margin-top: 10px; }
+.task { display: grid; grid-template-columns: 30px 1fr; gap: 0 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.group h3 + .task { border-top: 0; }
+.check {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--muted); background: transparent;
+  margin-top: 1px; padding: 0; cursor: pointer; display: grid; place-items: center; color: transparent;
+}
+.check svg { width: 14px; height: 14px; }
+.task.done .check { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.tbody { min-width: 0; background: none; border: 0; padding: 0; text-align: left; color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+.ttitle { font-weight: 600; overflow-wrap: anywhere; }
+.task.done .ttitle { color: var(--muted); text-decoration: line-through; }
+.tmeta { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.task.overdue .tmeta { color: var(--danger); font-weight: 600; }
+.pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.pill { font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums; }
+.pill.scheduled { border-color: var(--accent); color: var(--ink); }
+.pill.sent { text-decoration: line-through; opacity: 0.7; }
+.pill.pending { border-style: dashed; }
+.details { grid-column: 2; display: flex; flex-direction: column; gap: 10px; padding-top: 10px; }
+.remlist { margin: 0; padding: 0; list-style: none; font-size: 0.85rem; display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
+.remlist .state { color: var(--muted); }
+.empty { color: var(--muted); font-size: 0.95rem; margin: 0; }
+details.donebox summary { cursor: pointer; font: 600 0.78rem/1.6 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
 .topic { font: 600 0.95rem ui-monospace, "SF Mono", Menlo, monospace; overflow-wrap: anywhere; background: var(--bg); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; user-select: all; -webkit-user-select: all; }
 ol.steps { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; font-size: 0.95rem; }
 .small { font-size: 0.85rem; color: var(--muted); margin: 0; }
@@ -115,38 +135,43 @@ ol.steps { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column
 <main>
   <header>
     <h1>Nudge</h1>
-    <span class="status" id="status">Not set up yet</span>
+    <span class="status" id="status"></span>
   </header>
 
   <form class="card" id="form" autocomplete="off">
-    <textarea id="text" rows="2" placeholder="Remind me to…" maxlength="300" aria-label="Reminder text"></textarea>
+    <h2 id="formTitle">New task</h2>
+    <textarea id="text" rows="2" placeholder="What needs doing?" maxlength="300" aria-label="Task"></textarea>
 
-    <div class="chips" role="group" aria-label="Remind me in">
-      <button type="button" class="chip" data-min="5">5m</button>
-      <button type="button" class="chip" data-min="15">15m</button>
-      <button type="button" class="chip" data-min="30" aria-pressed="true">30m</button>
-      <button type="button" class="chip" data-min="60">1h</button>
-      <button type="button" class="chip" data-min="120">2h</button>
-      <button type="button" class="chip" data-min="240">4h</button>
-      <button type="button" class="chip wide" data-tomorrow="9">Tmrw 9am</button>
+    <div class="field">
+      <span class="label">Deadline</span>
+      <div class="duerow">
+        <input type="date" id="dueDate" aria-label="Due date">
+        <input type="time" id="dueTime" aria-label="Due time">
+      </div>
+      <div class="chips" role="group" aria-label="Quick deadlines">
+        <button type="button" class="chip" data-quick="1h">In 1 hour</button>
+        <button type="button" class="chip" data-quick="today5">Today 5pm</button>
+        <button type="button" class="chip" data-quick="tmrw9">Tmrw 9am</button>
+        <button type="button" class="chip" data-quick="fri5">Fri 5pm</button>
+        <button type="button" class="chip" data-quick="mon9">Next Mon 9am</button>
+      </div>
     </div>
 
-    <div class="custom">
-      <input type="number" id="customNum" inputmode="numeric" min="1" placeholder="Custom" aria-label="Custom amount">
-      <select id="customUnit" aria-label="Custom unit">
-        <option value="1">minutes</option>
-        <option value="60">hours</option>
-        <option value="1440">days</option>
-      </select>
+    <div class="field">
+      <span class="label">Remind me</span>
+      <div class="chips" role="group" aria-label="Reminders" id="offsetChips"></div>
+      <div class="preview" id="preview"></div>
     </div>
 
-    <div class="when" id="when"></div>
-    <button class="primary" id="submit" type="submit">Set reminder</button>
+    <div class="formactions">
+      <button type="button" class="ghost" id="cancelEdit" hidden>Cancel</button>
+      <button class="primary" id="submit" type="submit">Add task</button>
+    </div>
   </form>
 
-  <section class="card" aria-labelledby="upTitle">
-    <h2 id="upTitle">Upcoming</h2>
-    <div class="list" id="list"></div>
+  <section class="card" aria-labelledby="listTitle">
+    <h2 id="listTitle" hidden>Tasks</h2>
+    <div id="list"></div>
   </section>
 
   <section class="card" aria-labelledby="setupTitle" id="setup">
@@ -160,7 +185,8 @@ ol.steps { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column
       <button type="button" class="ghost" id="copy">Copy topic</button>
       <button type="button" class="ghost" id="test">Send test now</button>
     </div>
-    <p class="small">The topic name works like a password: anyone who knows it can send you notifications, so don't share it. Reminders can be up to 3 days ahead. Removing a reminder here hides it, but ntfy will still deliver it.</p>
+    <p class="small">The topic name works like a password: anyone who knows it can send you notifications, so don't share it.</p>
+    <p class="small">ntfy holds a reminder for up to 3 days, so reminders further out are scheduled when you open Nudge. If a reminder is coming up and you haven't opened Nudge for a while, you'll get a check-in notification asking you to open it.</p>
     <details>
       <summary class="small">Use a different topic</summary>
       <div class="row" style="margin-top:10px">
@@ -174,8 +200,18 @@ ol.steps { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column
 
 <script>
 const NTFY = "https://ntfy.sh";
-const MAX_MIN = 3 * 24 * 60;
+const WINDOW = 70 * 3600e3; // ntfy.sh holds scheduled messages for up to 3 days; stay inside that
+const OFFSETS = [
+  { m: 0, short: "Due", long: "At due time" },
+  { m: 60, short: "1h", long: "1 hour before" },
+  { m: 180, short: "3h", long: "3 hours before" },
+  { m: 1440, short: "1d", long: "1 day before" },
+  { m: 2880, short: "2d", long: "2 days before" },
+  { m: 10080, short: "1w", long: "1 week before" },
+];
+const DEFAULT_OFFSETS = [0, 1440];
 const $ = id => document.getElementById(id);
+const offsetOf = m => OFFSETS.find(o => o.m === m);
 
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
@@ -188,151 +224,344 @@ function newTopic() {
 }
 let topic = store.get("topic", null);
 if (!topic) { topic = newTopic(); store.set("topic", topic); }
-let reminders = store.get("reminders", []);
-let selected = { min: 30 };
 
-function targetTime() {
-  if (selected.tomorrow != null) {
-    const t = new Date(); t.setDate(t.getDate() + 1); t.setHours(selected.tomorrow, 0, 0, 0); return t;
+// task: { id, title, due, done, doneAt, v, rem: [{ m, state: pending|scheduled|sent|skipped, topic? }] }
+let tasks = store.get("tasks", []);
+let cancelQueue = store.get("cancelQueue", []); // [{ topic, seq }] still to delete on ntfy
+let checkin = store.get("checkin", null);       // { at, topic } of the scheduled check-in
+let online = true;
+const save = () => { store.set("tasks", tasks); store.set("cancelQueue", cancelQueue); store.set("checkin", checkin); };
+const seqOf = (t, r) => `${t.id}-${t.v}-${r.m}`;
+const remAt = (t, r) => t.due - r.m * 60000;
+
+/* ---------- formatting ---------- */
+const sameDay = (a, b) => a.toDateString() === b.toDateString();
+const fmtClock = d => d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+function fmtDue(ms) {
+  const d = new Date(ms), now = new Date(), tm = new Date(); tm.setDate(tm.getDate() + 1);
+  if (sameDay(d, now)) return "Today " + fmtClock(d);
+  if (sameDay(d, tm)) return "Tomorrow " + fmtClock(d);
+  const o = { weekday: "short", day: "numeric", month: "short" };
+  if (d.getFullYear() !== now.getFullYear()) o.year = "numeric";
+  return d.toLocaleDateString([], o) + ", " + fmtClock(d);
+}
+function fmtSpan(a) {
+  const m = Math.round(a / 60000);
+  if (m < 60) return m + "m";
+  if (m < 1440) return Math.floor(m / 60) + "h" + (m % 60 ? " " + (m % 60) + "m" : "");
+  const d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60);
+  return d + "d" + (h && d < 7 ? " " + h + "h" : "");
+}
+const fmtRel = ms => ms >= Date.now() ? "in " + fmtSpan(ms - Date.now()) : fmtSpan(Date.now() - ms) + " overdue";
+
+/* ---------- ntfy ---------- */
+async function check(res) {
+  if (res.ok) return res;
+  let why = res.status;
+  try { why = (await res.json()).error || why; } catch {}
+  const e = new Error(why); e.http = true; throw e;
+}
+async function publish(path, message, at, title, tags, priority) {
+  const headers = { Title: title, Priority: String(priority), Tags: tags };
+  if (at) headers.At = String(Math.floor(at / 1000));
+  return check(await fetch(`${NTFY}/${path}`, { method: "POST", headers, body: message }));
+}
+const del = (t, seq) => fetch(`${NTFY}/${t}/${seq}`, { method: "DELETE" }).then(check);
+
+function queueCancels(t) {
+  for (const r of t.rem) if (r.state === "scheduled") { cancelQueue.push({ topic: r.topic || topic, seq: seqOf(t, r) }); r.state = "pending"; }
+}
+
+/* ---------- scheduling ---------- */
+let syncing = false, again = false;
+async function sync() {
+  if (syncing) { again = true; return; }
+  syncing = true;
+  try {
+    do { again = false; await syncOnce(); } while (again);
+  } finally { syncing = false; save(); render(); }
+}
+async function syncOnce() {
+  online = true;
+  // "ok", "http" (ntfy refused it; retrying won't help) or "offline"
+  const net = async fn => { try { await fn(); return "ok"; } catch (e) { if (e.http) return "http"; online = false; return "offline"; } };
+
+  for (const c of [...cancelQueue]) {
+    if (!online) break;
+    if (await net(() => del(c.topic, c.seq)) !== "offline") cancelQueue = cancelQueue.filter(x => x !== c);
   }
-  if (selected.min) return new Date(Date.now() + selected.min * 60000);
-  return null;
+
+  const now = Date.now();
+  let earliestWaiting = null, nextTask = null;
+  for (const t of tasks) {
+    if (t.done) continue;
+    for (const r of t.rem) {
+      const at = remAt(t, r);
+      if (r.state === "scheduled" && at <= now) r.state = "sent";
+      if (r.state !== "pending") continue;
+      if (at <= now + 30000) { r.state = "skipped"; continue; }
+      if (at - now > WINDOW) {
+        if (earliestWaiting == null || at < earliestWaiting) { earliestWaiting = at; nextTask = t; }
+        continue;
+      }
+      if (!online) continue;
+      const title = r.m === 0 ? "Due now" : "Due in " + offsetOf(r.m).long.replace(" before", "");
+      const res = await net(() => publish(`${topic}/${seqOf(t, r)}`, `${t.title}\nDue ${fmtDue(t.due)}`, at, title, r.m === 0 ? "alarm_clock" : "calendar", r.m === 0 ? 4 : 3));
+      if (res === "ok") { r.state = "scheduled"; r.topic = topic; }
+    }
+  }
+
+  // A check-in nudges you to open Nudge in time to schedule reminders that are more than 3 days out
+  if (!online) return;
+  if (earliestWaiting) {
+    const at = Math.min(earliestWaiting - WINDOW + 3600e3, now + WINDOW);
+    if (!checkin || checkin.at <= now || Math.abs(checkin.at - at) > 6 * 3600e3 || checkin.topic !== topic) {
+      if (checkin && checkin.topic !== topic && checkin.at > now) await net(() => del(checkin.topic, "checkin"));
+      const msg = `Open Nudge from your home screen so it can schedule your upcoming reminders. Next: ${nextTask.title} (due ${fmtDue(nextTask.due)})`;
+      if (await net(() => publish(`${topic}/checkin`, msg, at, "Open Nudge", "wave", 3)) === "ok") checkin = { at, topic };
+    }
+  } else if (checkin && checkin.at > now) {
+    if (await net(() => del(checkin.topic, "checkin")) !== "offline") checkin = null;
+  }
 }
 
-const fmtTime = d => d.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
-function fmtLeft(ms) {
-  const s = Math.max(0, Math.round(ms / 1000));
-  const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
-  if (d) return `${d}d ${h}h`;
-  if (h) return `${h}h ${String(m).padStart(2, "0")}m`;
-  return `${m}:${String(sec).padStart(2, "0")}`;
+/* ---------- form ---------- */
+let editing = null;
+let offsets = [...DEFAULT_OFFSETS];
+const pad = n => String(n).padStart(2, "0");
+function setDue(d) {
+  $("dueDate").value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  $("dueTime").value = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  updatePreview();
+}
+function formDue() {
+  const [y, mo, d] = ($("dueDate").value || "").split("-").map(Number);
+  if (!y) return null;
+  const [h, mi] = ($("dueTime").value || "17:00").split(":").map(Number);
+  return new Date(y, mo - 1, d, h, mi, 0, 0).getTime();
+}
+function quick(kind) {
+  const d = new Date();
+  const at = (days, h) => { d.setDate(d.getDate() + days); d.setHours(h, 0, 0, 0); };
+  if (kind === "1h") { d.setTime(Date.now() + 3600e3); d.setSeconds(0, 0); }
+  else if (kind === "today5") at(0, 17);
+  else if (kind === "tmrw9") at(1, 9);
+  else if (kind === "fri5") at(((5 - d.getDay() + 7) % 7) || (d.getHours() >= 17 ? 7 : 0), 17);
+  else if (kind === "mon9") at(((1 - d.getDay() + 7) % 7) || 7, 9);
+  setDue(d);
+}
+document.querySelectorAll("[data-quick]").forEach(b => b.addEventListener("click", () => quick(b.dataset.quick)));
+$("dueDate").addEventListener("input", updatePreview);
+$("dueTime").addEventListener("input", updatePreview);
+
+function renderOffsetChips() {
+  const box = $("offsetChips"); box.textContent = "";
+  for (const o of OFFSETS) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "chip";
+    b.textContent = o.long; b.setAttribute("aria-pressed", offsets.includes(o.m));
+    b.addEventListener("click", () => {
+      offsets = offsets.includes(o.m) ? offsets.filter(x => x !== o.m) : [...offsets, o.m].sort((a, c) => c - a);
+      renderOffsetChips(); updatePreview();
+    });
+    box.append(b);
+  }
+}
+function updatePreview() {
+  const due = formDue(), box = $("preview"); box.textContent = "";
+  const line = (txt, cls) => { const s = document.createElement("span"); s.textContent = txt; if (cls) s.className = cls; box.append(s); };
+  if (!due) { line("Pick a deadline"); }
+  else if (!offsets.length) { line("No reminders. The task just sits on your list."); }
+  else for (const m of [...offsets].sort((a, b) => b - a)) {
+    const at = due - m * 60000, past = at <= Date.now();
+    line(`${fmtDue(at)} · ${offsetOf(m).long}${past ? " (already passed)" : ""}`, past ? "past" : "");
+  }
+  $("submit").disabled = !due;
 }
 
-function updateWhen() {
-  const t = targetTime();
-  const mins = t ? (t - Date.now()) / 60000 : 0;
-  if (!t) $("when").textContent = "Pick a time";
-  else if (mins > MAX_MIN) $("when").textContent = "That's more than 3 days away. ntfy only holds reminders for 3 days.";
-  else $("when").textContent = "Alerts " + fmtTime(t);
-  $("submit").disabled = !t || mins > MAX_MIN || mins < 0.2;
+function resetForm() {
+  editing = null; offsets = [...DEFAULT_OFFSETS];
+  $("text").value = ""; $("formTitle").textContent = "New task"; $("submit").textContent = "Add task"; $("cancelEdit").hidden = true;
+  quick("tmrw9"); renderOffsetChips();
+}
+function startEdit(t) {
+  editing = t.id; offsets = t.rem.map(r => r.m);
+  $("text").value = t.title; setDue(new Date(t.due)); renderOffsetChips();
+  $("formTitle").textContent = "Edit task"; $("submit").textContent = "Save changes"; $("cancelEdit").hidden = false;
+  window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+}
+$("cancelEdit").addEventListener("click", resetForm);
+
+$("form").addEventListener("submit", e => {
+  e.preventDefault();
+  const title = $("text").value.trim(), due = formDue();
+  if (!title) { $("text").focus(); toast("Type what needs doing", true); return; }
+  if (!due) { toast("Pick a deadline", true); return; }
+  const rem = [...offsets].sort((a, b) => b - a).map(m => ({ m, state: "pending" }));
+  if (editing) {
+    const t = tasks.find(x => x.id === editing);
+    if (t) { queueCancels(t); Object.assign(t, { title, due, rem, v: t.v + 1, done: false }); }
+    toast("Task updated");
+  } else {
+    tasks.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), title, due, done: false, v: 1, rem });
+    toast(rem.some(r => due - r.m * 60000 > Date.now()) ? "Task added. You'll be reminded." : "Task added");
+  }
+  resetForm(); save(); render(); sync();
+});
+
+/* ---------- list ---------- */
+let expanded = null;
+function groupOf(t) {
+  if (t.done) return "done";
+  const now = Date.now(), d = new Date(t.due), tm = new Date(); tm.setDate(tm.getDate() + 1);
+  if (t.due < now) return "overdue";
+  if (sameDay(d, new Date())) return "today";
+  if (sameDay(d, tm)) return "tomorrow";
+  if (t.due - now < 7 * 864e5) return "week";
+  return "later";
+}
+const GROUPS = [["overdue", "Overdue"], ["today", "Today"], ["tomorrow", "Tomorrow"], ["week", "Next 7 days"], ["later", "Later"]];
+const CHECK_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+
+function remState(t, r) {
+  const at = remAt(t, r);
+  if (t.done) return "";
+  if (r.state === "scheduled") return at <= Date.now() ? "Sent" : "Scheduled";
+  if (r.state === "sent") return "Sent";
+  if (r.state === "skipped") return "Time had passed";
+  return at - Date.now() > WINDOW ? "Scheduled when you open Nudge nearer the time" : (online ? "Scheduling…" : "Waiting for internet");
 }
 
-function pick(btn) {
-  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === btn ? "true" : "false"));
-  $("customNum").value = "";
-  selected = btn.dataset.tomorrow != null ? { tomorrow: +btn.dataset.tomorrow } : { min: +btn.dataset.min };
-  updateWhen();
-}
-document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => pick(c)));
-function fromCustom() {
-  const n = parseFloat($("customNum").value);
-  if (!(n > 0)) return;
-  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
-  selected = { min: n * +$("customUnit").value };
-  updateWhen();
-}
-$("customNum").addEventListener("input", fromCustom);
-$("customUnit").addEventListener("change", fromCustom);
+function taskEl(t) {
+  const el = document.createElement("div");
+  el.className = "task" + (t.done ? " done" : "") + (groupOf(t) === "overdue" ? " overdue" : "");
+  const ck = document.createElement("button"); ck.type = "button"; ck.className = "check"; ck.innerHTML = CHECK_SVG;
+  ck.setAttribute("aria-label", t.done ? "Mark not done" : "Mark done");
+  ck.addEventListener("click", () => toggleDone(t));
 
+  const body = document.createElement("button"); body.type = "button"; body.className = "tbody";
+  body.setAttribute("aria-expanded", expanded === t.id);
+  const title = document.createElement("span"); title.className = "ttitle"; title.textContent = t.title;
+  const meta = document.createElement("span"); meta.className = "tmeta";
+  meta.textContent = t.done ? "Done " + fmtDue(t.doneAt || t.due) : `${fmtDue(t.due)} · ${fmtRel(t.due)}`;
+  body.append(title, meta);
+  if (!t.done) {
+    const pills = document.createElement("span"); pills.className = "pills";
+    for (const r of t.rem) {
+      if (r.state === "skipped") continue;
+      const p = document.createElement("span");
+      const sent = r.state === "sent" || (r.state === "scheduled" && remAt(t, r) <= Date.now());
+      p.className = "pill " + (sent ? "sent" : r.state);
+      p.textContent = "🔔 " + offsetOf(r.m).short;
+      pills.append(p);
+    }
+    if (pills.childElementCount) body.append(pills);
+  }
+  body.addEventListener("click", () => { expanded = expanded === t.id ? null : t.id; render(); });
+  el.append(ck, body);
+
+  if (expanded === t.id) {
+    const det = document.createElement("div"); det.className = "details";
+    if (!t.done && t.rem.length) {
+      const ul = document.createElement("ul"); ul.className = "remlist";
+      for (const r of t.rem) {
+        const li = document.createElement("li");
+        li.textContent = `${offsetOf(r.m).long}: ${fmtDue(remAt(t, r))} `;
+        const s = document.createElement("span"); s.className = "state"; s.textContent = "· " + remState(t, r);
+        li.append(s); ul.append(li);
+      }
+      det.append(ul);
+    }
+    const row = document.createElement("div"); row.className = "row";
+    const ed = document.createElement("button"); ed.type = "button"; ed.className = "ghost"; ed.textContent = "Edit";
+    ed.addEventListener("click", () => startEdit(t));
+    const rm = document.createElement("button"); rm.type = "button"; rm.className = "ghost danger"; rm.textContent = "Delete";
+    rm.addEventListener("click", () => {
+      if (!rm.dataset.armed) { rm.dataset.armed = "1"; rm.textContent = "Tap again to delete"; return; }
+      queueCancels(t); tasks = tasks.filter(x => x !== t); expanded = null;
+      if (editing === t.id) resetForm();
+      save(); render(); sync(); toast("Task deleted");
+    });
+    if (!t.done) row.append(ed);
+    row.append(rm); det.append(row); el.append(det);
+  }
+  return el;
+}
+
+function toggleDone(t) {
+  if (!t.done) {
+    t.done = true; t.doneAt = Date.now(); queueCancels(t);
+    toast(t.rem.some(r => remAt(t, r) > Date.now()) ? "Done. Its reminders are cancelled." : "Done");
+  } else {
+    t.done = false; t.doneAt = null; t.v++;
+    for (const r of t.rem) if (r.state !== "sent") r.state = "pending";
+    toast("Back on your list");
+  }
+  save(); render(); sync();
+}
+
+function render() {
+  const now = Date.now();
+  tasks = tasks.filter(t => !t.done || now - (t.doneAt || 0) < 30 * 864e5); // done tasks drop off after 30 days
+  const list = $("list"); list.textContent = "";
+  const open = tasks.filter(t => !t.done).sort((a, b) => a.due - b.due);
+  const done = tasks.filter(t => t.done).sort((a, b) => b.doneAt - a.doneAt);
+  $("listTitle").hidden = !!open.length;
+  if (!open.length) {
+    const p = document.createElement("p"); p.className = "empty";
+    p.textContent = done.length ? "All done. Add a task above when something new comes up." : "No tasks yet. Add one above with a deadline, and pick when you want to be reminded.";
+    list.append(p);
+  }
+  for (const [key, label] of GROUPS) {
+    const items = open.filter(t => groupOf(t) === key);
+    if (!items.length) continue;
+    const g = document.createElement("div"); g.className = "group";
+    const h = document.createElement("h3"); h.textContent = `${label} · ${items.length}`; if (key === "overdue") h.className = "overdue";
+    g.append(h, ...items.map(taskEl)); list.append(g);
+  }
+  if (done.length) {
+    const d = document.createElement("details"); d.className = "donebox group"; d.open = !!store.get("doneOpen", false);
+    d.addEventListener("toggle", () => store.set("doneOpen", d.open));
+    const s = document.createElement("summary"); s.textContent = `Done · ${done.length}`;
+    d.append(s, ...done.map(taskEl)); list.append(d);
+  }
+
+  const overdue = open.filter(t => t.due < now).length;
+  const tested = store.get("tested", false);
+  const st = $("status");
+  st.textContent = !tested ? "Set up your phone below" : !online ? "Offline. Reminders will sync later." : `${open.length} to do` + (overdue ? ` · ${overdue} overdue` : "");
+  st.classList.toggle("warn", !tested || !online || overdue > 0);
+}
+
+/* ---------- misc ---------- */
 let toastTimer;
 function toast(msg, bad) {
   const t = $("toast"); t.textContent = msg; t.classList.toggle("bad", !!bad); t.classList.add("show");
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
 }
-
-async function send(message, at) {
-  const body = { topic, title: "Reminder", message, priority: 4, tags: ["alarm_clock"] };
-  if (at) body.delay = String(Math.floor(at.getTime() / 1000));
-  const res = await fetch(NTFY, { method: "POST", body: JSON.stringify(body) });
-  if (!res.ok) {
-    let why = res.status;
-    try { why = (await res.json()).error || why; } catch {}
-    throw new Error(why);
-  }
-  return res.json();
-}
-
-$("form").addEventListener("submit", async e => {
-  e.preventDefault();
-  const text = $("text").value.trim();
-  if (!text) { $("text").focus(); toast("Type what to remind you about", true); return; }
-  const at = targetTime();
-  $("submit").disabled = true; $("submit").textContent = "Setting…";
-  try {
-    const r = await send(text, at);
-    reminders.push({ id: r.id, text, at: at.getTime() });
-    store.set("reminders", reminders);
-    $("text").value = "";
-    toast("Reminder set for " + fmtTime(at));
-    render();
-  } catch (err) {
-    toast(navigator.onLine ? "Couldn't reach ntfy (" + err.message + "). Try again." : "You're offline. Try again when connected.", true);
-  } finally {
-    $("submit").textContent = "Set reminder"; updateWhen();
-  }
-});
-
-function render() {
-  const now = Date.now();
-  // forget finished reminders after 12 hours
-  reminders = reminders.filter(r => r.at > now - 12 * 3600e3);
-  store.set("reminders", reminders);
-  const list = $("list"); list.textContent = "";
-  if (!reminders.length) {
-    const p = document.createElement("p"); p.className = "empty";
-    p.textContent = "Nothing scheduled. Type a reminder above and pick a time.";
-    list.append(p); return;
-  }
-  [...reminders].sort((a, b) => a.at - b.at).forEach(r => {
-    const done = r.at <= now;
-    const el = document.createElement("div"); el.className = "item" + (done ? " done" : "");
-    const text = document.createElement("div"); text.className = "text"; text.textContent = r.text;
-    const count = document.createElement("div"); count.className = "count"; count.dataset.at = r.at;
-    count.textContent = done ? "Sent" : fmtLeft(r.at - now);
-    const meta = document.createElement("div"); meta.className = "meta"; meta.textContent = fmtTime(new Date(r.at));
-    const rm = document.createElement("button"); rm.type = "button"; rm.className = "remove";
-    rm.textContent = done ? "Clear" : "Remove from list";
-    rm.addEventListener("click", () => { reminders = reminders.filter(x => x !== r); store.set("reminders", reminders); render(); });
-    el.append(text, count, meta, rm); list.append(el);
-  });
-}
-
-function tick() {
-  const now = Date.now();
-  let changed = false;
-  document.querySelectorAll(".count[data-at]").forEach(c => {
-    const at = +c.dataset.at;
-    if (at <= now && c.textContent !== "Sent") changed = true;
-    else if (at > now) c.textContent = fmtLeft(at - now);
-  });
-  if (changed) render();
-  updateWhen();
-}
-
-function showTopic() {
-  $("topic").textContent = topic;
-  $("topicInput").value = topic;
-  const ready = store.get("tested", false);
-  $("status").textContent = ready ? "Alerts via ntfy" : "Set up your phone below";
-  $("status").classList.toggle("warn", !ready);
-}
+function showTopic() { $("topic").textContent = topic; $("topicInput").value = topic; }
 $("copy").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(topic); toast("Topic copied"); }
   catch { const r = document.createRange(); r.selectNodeContents($("topic")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Topic selected. Tap Copy."); }
 });
 $("test").addEventListener("click", async () => {
-  try { await send("Test from Nudge. Your reminders will look like this."); store.set("tested", true); showTopic(); toast("Test sent. Check your phone."); }
+  try { await publish(topic, "Test from Nudge. Your reminders will look like this.", null, "Reminder", "alarm_clock", 4); store.set("tested", true); render(); toast("Test sent. Check your phone."); }
   catch (err) { toast("Couldn't reach ntfy (" + err.message + ")", true); }
 });
 $("saveTopic").addEventListener("click", () => {
   const v = $("topicInput").value.trim();
   if (!/^[-_A-Za-z0-9]{6,64}$/.test(v)) { toast("Use 6–64 letters, numbers, - or _", true); return; }
-  topic = v; store.set("topic", topic); store.set("tested", false); showTopic(); toast("Topic saved. Subscribe to it in ntfy.");
+  // move scheduled reminders to the new topic
+  for (const t of tasks) if (!t.done) { queueCancels(t); t.v++; }
+  topic = v; store.set("topic", topic); store.set("tested", false); showTopic(); save(); sync();
+  toast("Topic saved. Subscribe to it in ntfy.");
 });
 
-showTopic(); render(); updateWhen();
-setInterval(tick, 1000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
+store.set("reminders", null); // data from the earlier version
+showTopic(); resetForm(); render(); sync();
+setInterval(() => { render(); updatePreview(); }, 30000);
+setInterval(sync, 5 * 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) sync(); });
+addEventListener("online", sync);
 </script>
 </body>
 </html>
