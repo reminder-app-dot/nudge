@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nudge</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nudge">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EEF2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1A27" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: single phone column — compose card on top, upcoming list below, setup tucked at the end */
+:root {
+  --bg: #EEF2F7;
+  --surface: #FFFFFF;
+  --ink: #16324F;
+  --muted: #5B6E84;
+  --line: #D6DEE8;
+  --accent: #E8920F;
+  --accent-ink: #1B1205;
+  --chip: #E3EAF2;
+  --ok: #2F7D5B;
+  --danger: #B3402F;
+  --display: "Bricolage Grotesque", ui-rounded, -apple-system, system-ui, sans-serif;
+  --body: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0E1A27; --surface: #16263A; --ink: #E7EEF6; --muted: #93A6BC;
+    --line: #26394F; --accent: #FFB547; --accent-ink: #1B1205; --chip: #1E3048;
+    --ok: #6CC79C; --danger: #F08A78; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font: 16px/1.45 var(--body);
+  -webkit-tap-highlight-color: transparent;
+  padding-top: max(16px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 4px; }
+h1 { font: 800 2rem/1 var(--display); letter-spacing: -0.02em; margin: 0; }
+h2 { font: 600 0.78rem/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.status { font-size: 0.82rem; color: var(--muted); }
+.status.warn { color: var(--danger); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+textarea, input[type=number], input[type=text], input[type=datetime-local], select {
+  width: 100%; font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+}
+textarea { font-size: 1.15rem; resize: none; min-height: 3.2em; }
+textarea:focus, input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.chip {
+  font: 600 1rem var(--body); color: var(--ink); background: var(--chip);
+  border: 1px solid transparent; border-radius: 12px; padding: 12px 0; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.chip.wide { grid-column: span 2; }
+
+.custom { display: grid; grid-template-columns: 1fr 1.3fr; gap: 8px; }
+.when { font-size: 0.9rem; color: var(--muted); min-height: 1.3em; font-variant-numeric: tabular-nums; }
+
+.primary {
+  font: 700 1.1rem var(--body); background: var(--accent); color: var(--accent-ink);
+  border: 0; border-radius: 14px; padding: 16px; cursor: pointer;
+}
+.primary:disabled { opacity: 0.45; cursor: default; }
+
+.list { display: flex; flex-direction: column; }
+.item { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 14px 0; border-top: 1px solid var(--line); align-items: center; }
+.item:first-child { border-top: 0; padding-top: 4px; }
+.item .text { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.item .meta { grid-column: 1; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.item .count { grid-row: 1 / span 2; grid-column: 2; font: 800 1.2rem var(--display); font-variant-numeric: tabular-nums; text-align: right; }
+.item.done .text, .item.done .count { color: var(--muted); }
+.item.done .count { font-size: 0.9rem; font-family: var(--body); font-weight: 600; color: var(--ok); }
+.item .remove { grid-column: 1 / -1; justify-self: start; font-size: 0.8rem; background: none; border: 0; color: var(--muted); padding: 2px 0; cursor: pointer; text-decoration: underline; }
+.empty { color: var(--muted); font-size: 0.95rem; margin: 0; }
+
+.ghost { font: 600 0.95rem var(--body); background: var(--chip); color: var(--ink); border: 0; border-radius: 12px; padding: 12px 14px; cursor: pointer; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > * { flex: 1 1 auto; }
+.topic { font: 600 0.95rem ui-monospace, "SF Mono", Menlo, monospace; overflow-wrap: anywhere; background: var(--bg); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; user-select: all; -webkit-user-select: all; }
+ol.steps { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; font-size: 0.95rem; }
+.small { font-size: 0.85rem; color: var(--muted); margin: 0; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px);
+  background: var(--ink); color: var(--surface); padding: 12px 18px; border-radius: 999px; font-weight: 600;
+  opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; max-width: calc(100% - 32px); text-align: center;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.bad { background: var(--danger); }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Nudge</h1>
+    <span class="status" id="status">Not set up yet</span>
+  </header>
+
+  <form class="card" id="form" autocomplete="off">
+    <textarea id="text" rows="2" placeholder="Remind me to…" maxlength="300" aria-label="Reminder text"></textarea>
+
+    <div class="chips" role="group" aria-label="Remind me in">
+      <button type="button" class="chip" data-min="5">5m</button>
+      <button type="button" class="chip" data-min="15">15m</button>
+      <button type="button" class="chip" data-min="30" aria-pressed="true">30m</button>
+      <button type="button" class="chip" data-min="60">1h</button>
+      <button type="button" class="chip" data-min="120">2h</button>
+      <button type="button" class="chip" data-min="240">4h</button>
+      <button type="button" class="chip wide" data-tomorrow="9">Tmrw 9am</button>
+    </div>
+
+    <div class="custom">
+      <input type="number" id="customNum" inputmode="numeric" min="1" placeholder="Custom" aria-label="Custom amount">
+      <select id="customUnit" aria-label="Custom unit">
+        <option value="1">minutes</option>
+        <option value="60">hours</option>
+        <option value="1440">days</option>
+      </select>
+    </div>
+
+    <div class="when" id="when"></div>
+    <button class="primary" id="submit" type="submit">Set reminder</button>
+  </form>
+
+  <section class="card" aria-labelledby="upTitle">
+    <h2 id="upTitle">Upcoming</h2>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section class="card" aria-labelledby="setupTitle" id="setup">
+    <h2 id="setupTitle">Phone setup</h2>
+    <ol class="steps">
+      <li>Install <b>ntfy</b> from the App Store and allow notifications.</li>
+      <li>In ntfy, tap <b>+</b>, and subscribe to this topic (keep the server as ntfy.sh):</li>
+    </ol>
+    <div class="topic" id="topic"></div>
+    <div class="row">
+      <button type="button" class="ghost" id="copy">Copy topic</button>
+      <button type="button" class="ghost" id="test">Send test now</button>
+    </div>
+    <p class="small">The topic name works like a password: anyone who knows it can send you notifications, so don't share it. Reminders can be up to 3 days ahead. Removing a reminder here hides it, but ntfy will still deliver it.</p>
+    <details>
+      <summary class="small">Use a different topic</summary>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="topicInput" aria-label="Topic name" placeholder="your-topic-name">
+        <button type="button" class="ghost" id="saveTopic">Save</button>
+      </div>
+    </details>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const NTFY = "https://ntfy.sh";
+const MAX_MIN = 3 * 24 * 60;
+const $ = id => document.getElementById(id);
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+function newTopic() {
+  const a = new Uint8Array(12); crypto.getRandomValues(a);
+  return "nudge-" + Array.from(a, b => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join("");
+}
+let topic = store.get("topic", null);
+if (!topic) { topic = newTopic(); store.set("topic", topic); }
+let reminders = store.get("reminders", []);
+let selected = { min: 30 };
+
+function targetTime() {
+  if (selected.tomorrow != null) {
+    const t = new Date(); t.setDate(t.getDate() + 1); t.setHours(selected.tomorrow, 0, 0, 0); return t;
+  }
+  if (selected.min) return new Date(Date.now() + selected.min * 60000);
+  return null;
+}
+
+const fmtTime = d => d.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
+function fmtLeft(ms) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+  if (d) return `${d}d ${h}h`;
+  if (h) return `${h}h ${String(m).padStart(2, "0")}m`;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+function updateWhen() {
+  const t = targetTime();
+  const mins = t ? (t - Date.now()) / 60000 : 0;
+  if (!t) $("when").textContent = "Pick a time";
+  else if (mins > MAX_MIN) $("when").textContent = "That's more than 3 days away. ntfy only holds reminders for 3 days.";
+  else $("when").textContent = "Alerts " + fmtTime(t);
+  $("submit").disabled = !t || mins > MAX_MIN || mins < 0.2;
+}
+
+function pick(btn) {
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === btn ? "true" : "false"));
+  $("customNum").value = "";
+  selected = btn.dataset.tomorrow != null ? { tomorrow: +btn.dataset.tomorrow } : { min: +btn.dataset.min };
+  updateWhen();
+}
+document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => pick(c)));
+function fromCustom() {
+  const n = parseFloat($("customNum").value);
+  if (!(n > 0)) return;
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+  selected = { min: n * +$("customUnit").value };
+  updateWhen();
+}
+$("customNum").addEventListener("input", fromCustom);
+$("customUnit").addEventListener("change", fromCustom);
+
+let toastTimer;
+function toast(msg, bad) {
+  const t = $("toast"); t.textContent = msg; t.classList.toggle("bad", !!bad); t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+async function send(message, at) {
+  const body = { topic, title: "Reminder", message, priority: 4, tags: ["alarm_clock"] };
+  if (at) body.delay = String(Math.floor(at.getTime() / 1000));
+  const res = await fetch(NTFY, { method: "POST", body: JSON.stringify(body) });
+  if (!res.ok) {
+    let why = res.status;
+    try { why = (await res.json()).error || why; } catch {}
+    throw new Error(why);
+  }
+  return res.json();
+}
+
+$("form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const text = $("text").value.trim();
+  if (!text) { $("text").focus(); toast("Type what to remind you about", true); return; }
+  const at = targetTime();
+  $("submit").disabled = true; $("submit").textContent = "Setting…";
+  try {
+    const r = await send(text, at);
+    reminders.push({ id: r.id, text, at: at.getTime() });
+    store.set("reminders", reminders);
+    $("text").value = "";
+    toast("Reminder set for " + fmtTime(at));
+    render();
+  } catch (err) {
+    toast(navigator.onLine ? "Couldn't reach ntfy (" + err.message + "). Try again." : "You're offline. Try again when connected.", true);
+  } finally {
+    $("submit").textContent = "Set reminder"; updateWhen();
+  }
+});
+
+function render() {
+  const now = Date.now();
+  // forget finished reminders after 12 hours
+  reminders = reminders.filter(r => r.at > now - 12 * 3600e3);
+  store.set("reminders", reminders);
+  const list = $("list"); list.textContent = "";
+  if (!reminders.length) {
+    const p = document.createElement("p"); p.className = "empty";
+    p.textContent = "Nothing scheduled. Type a reminder above and pick a time.";
+    list.append(p); return;
+  }
+  [...reminders].sort((a, b) => a.at - b.at).forEach(r => {
+    const done = r.at <= now;
+    const el = document.createElement("div"); el.className = "item" + (done ? " done" : "");
+    const text = document.createElement("div"); text.className = "text"; text.textContent = r.text;
+    const count = document.createElement("div"); count.className = "count"; count.dataset.at = r.at;
+    count.textContent = done ? "Sent" : fmtLeft(r.at - now);
+    const meta = document.createElement("div"); meta.className = "meta"; meta.textContent = fmtTime(new Date(r.at));
+    const rm = document.createElement("button"); rm.type = "button"; rm.className = "remove";
+    rm.textContent = done ? "Clear" : "Remove from list";
+    rm.addEventListener("click", () => { reminders = reminders.filter(x => x !== r); store.set("reminders", reminders); render(); });
+    el.append(text, count, meta, rm); list.append(el);
+  });
+}
+
+function tick() {
+  const now = Date.now();
+  let changed = false;
+  document.querySelectorAll(".count[data-at]").forEach(c => {
+    const at = +c.dataset.at;
+    if (at <= now && c.textContent !== "Sent") changed = true;
+    else if (at > now) c.textContent = fmtLeft(at - now);
+  });
+  if (changed) render();
+  updateWhen();
+}
+
+function showTopic() {
+  $("topic").textContent = topic;
+  $("topicInput").value = topic;
+  const ready = store.get("tested", false);
+  $("status").textContent = ready ? "Alerts via ntfy" : "Set up your phone below";
+  $("status").classList.toggle("warn", !ready);
+}
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(topic); toast("Topic copied"); }
+  catch { const r = document.createRange(); r.selectNodeContents($("topic")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Topic selected. Tap Copy."); }
+});
+$("test").addEventListener("click", async () => {
+  try { await send("Test from Nudge. Your reminders will look like this."); store.set("tested", true); showTopic(); toast("Test sent. Check your phone."); }
+  catch (err) { toast("Couldn't reach ntfy (" + err.message + ")", true); }
+});
+$("saveTopic").addEventListener("click", () => {
+  const v = $("topicInput").value.trim();
+  if (!/^[-_A-Za-z0-9]{6,64}$/.test(v)) { toast("Use 6–64 letters, numbers, - or _", true); return; }
+  topic = v; store.set("topic", topic); store.set("tested", false); showTopic(); toast("Topic saved. Subscribe to it in ntfy.");
+});
+
+showTopic(); render(); updateWhen();
+setInterval(tick, 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
+</script>
+</body>
+</html>
